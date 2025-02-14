@@ -24,7 +24,7 @@ class ItemViewSet(viewsets.ModelViewSet):
         return Item.objects.all()
 
     def perform_create(self, serializer):
-        user_id = self.request.data.get("user")  # Get user ID from request
+        user_id = self.request.data.get("user")  # Get user ID from json body sent by request
         try:
             user = User.objects.get(id=user_id)
             serializer.save(user=user)
@@ -32,7 +32,7 @@ class ItemViewSet(viewsets.ModelViewSet):
             return Response({"error": "Invalid user ID"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'])
-    def mark_claimed(self, request, pk=None):
+    def mark_claimed(self, request, pk=None): #self is viewset instance 
         
         item = self.get_object()
         if item.status == 'found':
@@ -44,7 +44,7 @@ class ItemViewSet(viewsets.ModelViewSet):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post']) #deatil=True means action is performed on a single object
     def mark_resolved(self, request, pk=None):
         """
         Custom endpoint to mark an item as resolved
