@@ -6,6 +6,7 @@ from .serializers import ItemSerializer
 from rest_framework.reverse import reverse
 from django.contrib.auth.models import User
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 
 class ItemViewSet(viewsets.ModelViewSet):
@@ -82,6 +83,20 @@ class ItemViewSet(viewsets.ModelViewSet):
                 })
 
         return Response(matched_items, status=status.HTTP_200_OK)
+    
+    @action(detail=False,methods=['delete'])
+    def delete_item(self,request):
+        # item_name=request.query_params.get('name')
+        name=self.request.data.get('name')
+        if not name:
+            return Response({"error":"Item name required"},status=status.HTTP_400_BAD_REQUEST)
+        item= get_object_or_404(Item, name=name)
+        if item.status=="claimed":
+            item.delete()
+            return Response({"message": f"Item '{name}' has been deleted."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": f"Item '{name}' is not marked as claimed."}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(['GET'])
@@ -116,6 +131,11 @@ def api_root(request, format=None):
                 'category': 'Item category (e.g., electronics, clothing)',
                 'color': 'Main color of the item'
             }
+        },
+        'delete_item': {
+            'url': reverse('item-delete-item', request=request, format=format),
+            'method': 'DELETE',
+            'description': 'Delete a claimed lost and found item'
         },
         'item_matching': {
             'url': reverse('item-match-items', request=request, format=format),
